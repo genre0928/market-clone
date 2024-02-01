@@ -7,6 +7,18 @@ footer {
   background-color: white;
 }
 
+@keyframes icons-floating {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
 .footer-block {
   display: flex;
   justify-content: space-evenly;
@@ -30,4 +42,8 @@ footer {
 
 .footer-icons__img {
   width: 30px;
+}
+
+.footer-icons__img:hover {
+  animation: 0.8s icons-floating;
 }
