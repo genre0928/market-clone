@@ -1,5 +1,6 @@
 :root {
-  --main-color: #e78111;
+  --main-color: rgb(254, 111, 15);
+  --main-color__hover: rgba(254, 111, 15, 0.8);
 }
 
 main {
@@ -67,9 +68,9 @@ main {
   bottom: 80px;
   font-size: 15px;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  cursor: pointer;
 }
 
-.write-btn:active {
-  background-color: black;
-  border: 1px solid black;
+.write-btn:hover {
+  background-color: var(--main-color__hover);
 }
