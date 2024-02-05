@@ -68,7 +68,7 @@ main {
   bottom: 80px;
   font-size: 15px;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-  cursor: pointer;
+  text-decoration: none;
 }
 
 .write-btn:hover {
