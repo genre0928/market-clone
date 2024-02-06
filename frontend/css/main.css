@@ -27,8 +27,7 @@ main {
 }
 
 .item-list__img img {
-  width: 50px;
-  height: 50px;
+  width: 100%;
 }
 
 .item-list__info {

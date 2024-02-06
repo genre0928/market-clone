@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, Form
+from fastapi import FastAPI, UploadFile, Form, Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.staticfiles import StaticFiles
@@ -33,6 +33,14 @@ async def get_items() :
                         SELECT * from items;
                         """).fetchall()
     return JSONResponse(jsonable_encoder(dict(row) for row in rows))
+
+@app.get('/images/{item_id}')
+async def get_image(item_id) :
+    cur = con.cursor()
+    image_bytes = cur.execute(f"""
+                              SELECT image from items where id={item_id}
+                              """).fetchone()[0]
+    return Response(content=bytes.fromhex(image_bytes))
 
 
 app.mount("/", StaticFiles(directory="market-clone/frontend", html=True), name="frontend")
