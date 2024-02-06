@@ -8,6 +8,18 @@ import sqlite3
 con = sqlite3.connect('market-clone/db.db', check_same_thread=False)
 cur = con.cursor()
 
+cur.execute(f"""
+            CREATE TABLE if not exists items (
+                id INTEGER PRIMARY KEY,
+                title TEXT NOT NULL,
+                image BLOB,
+                price INTEGER NOT NULL,
+                description TEXT,
+                place TEXT NOT NULL,
+            	insertAt INTEGER
+);
+            """)
+
 app = FastAPI()
 
 @app.post('/items')
@@ -40,7 +52,7 @@ async def get_image(item_id) :
     image_bytes = cur.execute(f"""
                               SELECT image from items where id={item_id}
                               """).fetchone()[0]
-    return Response(content=bytes.fromhex(image_bytes))
+    return Response(content=bytes.fromhex(image_bytes), media_type='image/*')
 
 
 app.mount("/", StaticFiles(directory="market-clone/frontend", html=True), name="frontend")
