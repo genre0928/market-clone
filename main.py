@@ -1,7 +1,9 @@
-from fastapi import FastAPI, UploadFile, Form, Response
+from fastapi import FastAPI, UploadFile, Form, Response, Depends
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from fastapi.staticfiles import StaticFiles
+from fastapi_login import LoginManager
+from fastapi_login.exceptions import InvalidCredentialsException
 from typing import Annotated
 import sqlite3
 
@@ -22,6 +24,56 @@ cur.execute(f"""
 
 app = FastAPI()
 
+secret = "genre"
+manager = LoginManager(secret, '/login')
+
+@manager.user_loader()
+def query_user(data) :
+    WHERE_STATEMENTS = f'''id="{data}"'''
+    if type(data) == dict :
+        WHERE_STATEMENTS = f'''id="{data['id']}"'''
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    user = cur.execute(f"""
+                       SELECT * FROM users where {WHERE_STATEMENTS}
+                       """).fetchone()
+    return user
+
+@app.post('/login')
+def login(id:Annotated[str, Form()],
+          pw:Annotated[str,Form()]) :
+    user = query_user(id)
+    if not user :
+        raise InvalidCredentialsException
+    elif pw != user['pw'] :
+        raise InvalidCredentialsException
+    
+    access_token = manager.create_access_token(data = {
+        'sub' : {
+            'id' : user['id'],
+            'name' : user['name'],
+            'email' : user['email'],
+            'pw' : user['pw']
+        }
+    })
+    return {"access_token" : access_token}
+    
+
+@app.post('/signup')
+def signup(id:Annotated[str, Form()],
+           pw:Annotated[str, Form()],
+           name : Annotated[str, Form()],
+           email : Annotated[str, Form()]) :
+    cur.execute(f"""
+                    INSERT INTO users(id, name, email, pw)
+                    VALUES ('{id}', '{name}', '{email}', '{pw}')
+                """)
+    con.commit()
+    return '200'
+
+
+
+
 @app.post('/items')
 async def create_item(image:UploadFile,
                 title:Annotated[str, Form()],
@@ -38,7 +90,7 @@ async def create_item(image:UploadFile,
     return '200'    
 
 @app.get('/items')
-async def get_items() :
+async def get_items(user=Depends(manager)) :
     con.row_factory = sqlite3.Row
     cur = con.cursor()
     rows = cur.execute(f"""
@@ -55,16 +107,6 @@ async def get_image(item_id) :
     return Response(content=bytes.fromhex(image_bytes), media_type='image/*')
 
 
-@app.post('/signup')
-def signup(id:Annotated[str, Form()],
-           pw:Annotated[str, Form()],
-           name : Annotated[str, Form()],
-           email : Annotated[str, Form()]) :
-    cur.execute(f"""
-                    INSERT INTO users(id, name, email, pw)
-                    VALUES ('{id}', '{name}', '{email}', '{pw}')
-                """)
-    con.commit()
-    return '200'
+
 
 app.mount("/", StaticFiles(directory="market-clone/frontend", html=True), name="frontend")
